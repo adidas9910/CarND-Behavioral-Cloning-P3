@@ -39,14 +39,14 @@ get_ipython().run_line_magic('matplotlib', 'inline')
 
 ## import data information from the .csv data file
 lines = []
-with open('./data2/driving_log.csv') as csvfile:
+with open('./data/driving_log.csv') as csvfile:
     reader = csv.reader(csvfile)
     for line in reader:
         lines.append(line)
 
 ## load the actual data/images according to the data info
 images, measurements = [], []
-correction = 0.2
+correction = 0.28
 for line in lines:
     filename = line[0]
     center_image = cv2.imread(filename)
@@ -98,11 +98,22 @@ ax[0][1].imshow(augmented_images[1])
 ax[1][0].imshow(augmented_images[2])
 ax[1][1].imshow(augmented_images[3])
 
+
+# In[4]:
+
+
 fig, ax = plt.subplots(figsize=[16,9], constrained_layout=True)
 ax.plot(y_train)
 
 
-# In[4]:
+# In[5]:
+
+
+fig, ax = plt.subplots(figsize=[16,9], constrained_layout=True)
+ax.hist(y_train, bins=50)
+
+
+# In[6]:
 
 
 from keras.models import Sequential
@@ -127,23 +138,23 @@ model.add(Dense(50))
 model.add(Dense(1))
 
 # compile the model
-optimizeropts = optimizers.Adam(lr=2.0e-3)
+optimizeropts = optimizers.Adam(lr=7.0e-4)
 model.compile(loss='mse', metrics=['mse'], optimizer=optimizeropts)
 
 
 # ## Step 3: Train the deep learning model
 
-# In[5]:
+# In[7]:
 
 
 # train the model
-history = model.fit(X_train, y_train, validation_split=0.2,           shuffle=True, verbose=1 , epochs=4)
+history = model.fit(X_train, y_train, validation_split=0.2,           shuffle=True, verbose=1 , epochs=5)
 
 # save the model for its deployment in the "autonomous mode" in the simulator
 model.save('model.h5')
 
 
-# In[6]:
+# In[8]:
 
 
 # Virtualize the loss in the training process
@@ -157,7 +168,7 @@ ax.legend(['training set', 'validation set'], loc='upper right')
 plt.show()
 
 
-# In[7]:
+# In[9]:
 
 
 # predict with all the training data and calculate mse and r2
