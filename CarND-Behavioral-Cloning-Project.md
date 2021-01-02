@@ -1,4 +1,4 @@
-# **Traffic Sign Classifier Project** 
+# **Behavioral Cloning Project** 
 
 ## ChangYuan Liu
 
@@ -6,158 +6,88 @@
 
 The goals / steps of this project are the following:
 
-* Dataset Summary & Exploration
-  * Explore the datasets for training, validation, and testing
-  * Virtualize the distribution of the datasets
-* Design and Test a Model Architecture
-  * Pre-process the images, including grayscaling and normalization
-  * Revise LeNet deep learning model
-  * Train the model
-* Test the Model on New Images
-  * Predict the sign type for each image
-  * Analyze performance
-  * Output top 5 softmax probabilities for each image 
+* Collect training dataset
 
+* Design a Model Architecture and Train the Model
+  * Pre-process the data, including augmentation and normalization.
+  * Utilize the deep learning model from Nvidia team.
+  * Train the model.
+
+* Test the Model in the Autonomous Mode in the Simulator
+  * Run the simulator with the trained model
+  * Produce the video
+
+* Summarize the Project
+  
 [//]: # (Image References)
-[image1]: ./writeup_images/1_data_distribution.png
-[image2]: ./writeup_images/2_image_example.png
-[image3]: ./writeup_images/3_lenet.png
-[image4]: ./writeup_images/4_history_of_accuracy.png
-[image5]: ./writeup_images/5_new_images.png
-[image6]: ./writeup_images/6_normalized_images.png
+[image1]: ./writeup_images/1_image_example.png
+[image2]: ./writeup_images/2_measurements.png
+[image3]: ./writeup_images/3_cnn-architecture-624x890.png
+[image4]: ./writeup_images/4_train_history.png
 
 ---
 
 
-## 1. Dataset Summary & Exploration
+## 1. Collect training dataset
 
-First, load the datasets for training, validation, and testing from pickle files.
+After the simulation environment is set up, the first step of the project is collecting the dataset for training. After a few failing tries, I realized the deep leaning model could do as goog as the training set itself. So I extended the training data to a few laps, and I behaved with some waggling and corrections. 
 
-    Number of training examples = 34799
-    Number of validation examples = 4410
-    Number of testing examples = 12630
-    Image data shape = (32, 32, 3)
-    Number of classes = 43
+For this project, I collected 61,764 images, including the images from left, center, and right cameras.
 
-Then, virtulize the distribution of the datasets. The datasets seem having similar distribution in different categorical labels.
+## 2. Design a Model Architecture and Train the Model
 
-Here is the distribution of those 43 labels in these three datasets:
+### 2.1. Pre-process the data
+First, augment the dataset to generalize situations. Two augmentations are used in this project: (1) flipping the images and measurements; (2) using the images from left and right cameras and applying corrections to those images. After the augmentaion, there are 123,528 samples of images with shape of (160, 320, 3).
+
+Then, it is important to explore the dataset by plotting example images and the measurements. Plotting measurements helped me to find out that it was a bad idea to use keyborad to control directions in the training mode as the keyboard only provides a few anlges in the range between -1 and 1. Using mouse to control the direction would provide much finer angle data than keyboard.
 
 ![alt text][image1]
 
-
-
-## 2. Design and Test a Model Architecture
-
-(1) Pre-process the images in the datasets, including converting the images into grayscale and normalizing them. Here is an example of the original image and normalized image.
-
 ![alt text][image2]
 
-(2) Revise the LeNet model. 
+### 2.2. Utilize the deep learning model from Nvidia team
 
-Because the problem in this project is similar to the number identification problem, the LeNet is used for the project. Its diagram is shown as below. The model used in this project has different number of nodes in the last three layers: the number of nodes in layer 3 is changed from 120 to 240; the number of nodes in layer 4 is changed from 84 to 168; the number of layer 5 is changed from 10 to 43. Because the number of outputs is 43, which is much bigger than 10 in the number identification problem, I think it would help to expand the last a few layers.
+[The deep learning model from Nvidia](https://developer.nvidia.com/blog/deep-learning-self-driving-cars/) is used in this project. Its architecture is showing as below:
 
 ![alt text][image3]
 
-**Input**
+The following changes are made to the model for this project:
 
-The LeNet architecture accepts a 32x32xC image as input, where C is the number of color channels. If the images are grayscale, C is 1.
+**(1) A cropping layer is added between the normalization layer and the first convolutional layer;**
 
-**Architecture**
+**(2) The output put layer is changed to one node.**
 
-**Layer 1: Convolutional.** The output shape should be 28x28x6.
+### 2.3. Train the model
+Train the model on the dataset which is splitted into training, and validation data. The main knobs are the following hyperparameters: 
 
-**Activation.** relu activation function.
+    lr = 2.0e-3 #learning rate used for Adam optimizer
+    epochs = 4 # number of epochs
 
-**Pooling.** The output shape should be 14x14x6.
-
-**Layer 2: Convolutional.** The output shape should be 10x10x16.
-
-**Activation.** relu activation function.
-
-**Pooling.** The output shape should be 5x5x16.
-
-**Flatten.** Flatten the output shape of the final pooling layer such that it's 1D instead of 3D.
-
-**Layer 3: Fully Connected.** This should have 120 outputs. I changed it to 240 outputs for this project.
-
-**Activation.** relu activation function.
-
-**Layer 4: Fully Connected.** This should have 84 outputs. I changed it to 168 outputs for this project.
-
-**Activation.** relu activation function.
-
-**Layer 5: Fully Connected (Logits).** This should have 10 outputs. I changed it to 43 outputs for this project.
-
-
-**Output**
-
-Return the result of the 2nd fully connected layer (Layer 5).
-
-(3) Train the model.
-Train the model on the dataset for training, and validate on the dataset for validation. The main knobs are the following hyperparameters: 
-
-    LEARNING_RATE = 7.5e-4 #learning rate used for Adam optimizer
-    LAMBDA = 7.0e-5 # regularization parameter
-    EPOCHS = 60 # number of epochs
-    BATCH_SIZE = 128 # batch size
-
-Here is the history of accuracy over the epochs:
+Here is the history of Mean Squared Error (mse) over the epochs:
 
 ![alt text][image4]
 
-## 3. Test a Model on New Images
-(1) Pre-process the new images.
+After many iterations, I found out that the number of epochs could be smaller. Even it was set to more than 10, it might help reduce mse of the training set but not the validation set. In this case, setting the number of epochs to smaller would actually prevent overfitting.
 
-The original new images have different sizes, so they are resized and normalized as below before they are tested.
+## 3. Test the Model in the Autonomous Mode in the Simulator
+### Run the simulator with the trained model
+Run the cmd 'python drive.py model runx' and enter the autonomous mode in the simulator. The images needed to produce video would be generated in the folder 'runx'.
+### Produce the video
+Run the cmd 'python video.py runx'. The video 'runx.mp4' would be produced from the images in the folder 'runx'.
 
-![alt text][image5]
+## 4. Summarize the Project
+### 4.1. Shortcoming
 
-![alt text][image6]
+A shortcoming is the fact that lots of efforts and time are needed to generate the training dataset. Only after a few days, I realized that the training dataset is so important. There should be enough data points in the training dataset, and enough valuable or 'noisy' data in the dataset.
 
-The correct label for those images should be:
-                         
-    ClassId              SignName                  
-    27                Pedestrians
-    18            General caution
-    1        Speed limit (30km/h)
-    25                  Road work
-    28          Children crossing
-                     
-But the predictions are:
+Another shortcoming is that the project is about only the angle. The driving task is much more than that, at least there should some aspects about the speed, etc. 
 
-    ClassId                                           SignName
-    12                                           Priority road
-    14                                                    Stop
-    42       End of no passing by vehicles over 3.5 metric ...
-    25                                               Road work
-    12                                           Priority road
-The accuracy is only 20%. In addition, the top 5 softmax probabilities indicate that all the wrong predictions are very certain as their highest probilities are close to 1.
+### 4.2. Possible improvements
 
-    TopKV2(values=array(
-      [[9.9999714e-01, 1.5180156e-06, 7.2078274e-07, 4.5569141e-07, 7.5943134e-08],
-       [9.9934989e-01, 5.7708321e-04, 6.8868154e-05, 4.1291346e-06, 8.1953768e-09],
-       [9.9853671e-01, 9.8147546e-04, 4.7962563e-04, 6.2025799e-07, 5.6595144e-07],
-       [8.9593124e-01, 5.6267273e-02, 4.7791585e-02, 4.5822853e-06, 2.8378727e-06],
-       [9.9830127e-01, 1.6987451e-03, 3.1564407e-09, 4.2253191e-11, 8.7820655e-15]], 
-       dtype=float32), indices=array(
-      [[12, 25, 13, 15, 38],
-       [14, 17, 12, 40, 38],
-       [42, 12,  1, 38, 25],
-       [25, 11, 30, 34, 31],
-       [12, 40, 42, 41, 17]]))
+A possible improvement would be tweaking the model by adding or modifying some layers. It may include adding dropout, pooling etc.
 
+Other possible improvements may include getting more training dataset and finding better ways to tune the hyperparameters.
 
-Overall, the model couldn't predict the new images well.
-
-## 4. Shortcoming and Possible improvements
-
-The first shortcoming is the fact that the performance of the model for identifying new images from web is poor. This indicates that it is not practical to use this model in real systems.
-
-Another shortcoming is that the training process is tedious and time-consuming for tuning the hyperparameters. The number of epochs is high in my case; the initial conditions might need to be improved.
-
-A possible improvement would be tweaking the model by adding or modifying some layers. It may include adding dropout, changing activation functions (such as sigmoid), etc.
-
-Other possible improvements may include getting the training dataset more even distributed, transforming or rotating images, and finding better ways to tune the hyperparameters.
+Aside from the project itself, some improvements are needed for the code and simulation for the project from Udacity. The code and simulation environment are not up-to-date with the newer version of Python and tensorflow, etc. The workspace is not so user-friendly. I spent more than half of the time to figure out how to run the code and simulation on my laptop.
 
 
